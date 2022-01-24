@@ -14,3 +14,8 @@ The data set contains 1000 observations. The 6 variables are
 ## Synthetic dataset
 
 The folder synthpop contains the code to generate a synthetic dataset using the presets of `synthpop`. The variable `sex` is treated as a factor. The generated synthetic dataset is saved to `synth_data.csv`. The jupyter-lab notebook `visualizations.ipynb` contains various measure of the statistical differences between the two datasets.
+
+To convert the notebook to html I used
+```
+jupyter nbconvert --execute --to html visualizations.ipynb
+```
