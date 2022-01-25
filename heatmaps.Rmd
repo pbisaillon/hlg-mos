@@ -1,0 +1,163 @@
+---
+title: "Hackathon"
+author: "INS"
+date: "25/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+
+# Load in libraries and retrieve data -------------------------------------
+library(tidyverse)
+library(synthpop)
+library(reshape2)
+
+# Source R script from GitHub
+satgpa <-
+  readr::read_csv("/Documents and Settings/vongbri/Documents/Hackathon/hlg-mos/data/satgpa.csv") %>%
+  select(-sat_sum)
+
+synth_bisaillon <-
+  readr::read_csv(
+    "/Documents and Settings/vongbri/Documents/Hackathon/hlg-mos/synthpop/synth_data.csv"
+  )
+
+# Get upper triangle of the correlation matrix
+get_upper_tri <- function(cormat) {
+  cormat[lower.tri(cormat)] <- NA
+  return(cormat)
+}
+```
+## R synthpop
+
+Below are the summaries provided by synthpop.
+
+### Original data
+
+```{r sum_og, echo=FALSE}
+summary(satgpa)
+```
+
+### Synthetic data
+
+```{r sum_syn, echo=FALSE}
+summary(synth_bisaillon)
+```
+
+## Heat maps
+
+These plots show the correlation between the variables.
+
+:::::::::::::: {.columns}
+::: {.column width="50%"}
+
+### Original data
+```{r plot1, echo=FALSE, warning=FALSE}
+cormat <- round(cor(satgpa), 2)
+upper_tri <- get_upper_tri(cormat)
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+
+# Create a ggheatmap
+heat <-
+  ggplot(data = melted_cormat, aes(Var2, Var1, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(
+    low = "blue",
+    high = "red",
+    mid = "white",
+    midpoint = 0,
+    limit = c(-1, 1),
+    space = "Lab",
+    name = "Pearson Correlation"
+  ) +
+  theme_minimal() +
+  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+  theme(
+    axis.text.x = element_text(
+      vjust = 1,
+      size = 12,
+      hjust = 1
+    ),
+    axis.text.y = element_text(
+      vjust = 1,
+      size = 12,
+      hjust = 1
+    ),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.55, 0.65),
+    legend.direction = "horizontal") +
+  guides(fill = guide_colorbar(
+    barwidth = 7,
+    barheight = 1,
+    title.position = "top",
+    title.hjust = 0.5
+  )) +
+  coord_fixed()
+
+print(heat)
+```
+
+:::
+::: {.column width="50%"}
+
+### Synthetic data
+```{r plot2, echo=FALSE, warning=FALSE}
+cormat <- round(cor(synth_bisaillon), 2)
+upper_tri <- get_upper_tri(cormat)
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+
+# Create a ggheatmap
+heat <-
+  ggplot(data = melted_cormat, aes(Var2, Var1, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(
+    low = "blue",
+    high = "red",
+    mid = "white",
+    midpoint = 0,
+    limit = c(-1, 1),
+    space = "Lab",
+    name = "Pearson Correlation"
+  ) +
+  theme_minimal() +
+  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+  theme(
+    axis.text.x = element_text(
+      vjust = 1,
+      size = 12,
+      hjust = 1
+    ),
+    axis.text.y = element_text(
+      vjust = 1,
+      size = 12,
+      hjust = 1
+    ),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.55, 0.65),
+    legend.direction = "horizontal") +
+  guides(fill = guide_colorbar(
+    barwidth = 7,
+    barheight = 1,
+    title.position = "top",
+    title.hjust = 0.5
+  )) +
+  coord_fixed()
+
+print(heat)
+```
+
+:::
+::::::::::::::
