@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo=TRUE)
 library(tidyverse)
 library(synthpop)
 library(reshape2)
+library(emdist)
 
 # Source R script from GitHub
 satgpa <-
@@ -20,7 +21,7 @@ satgpa <-
   # removed this from the data set because it's dependent on sat_m and sat_v
 
 synth_bisaillon <-
-  readr::read_csv("./data/synth_data.csv")
+  readr::read_csv("./synthpop/synth_data.csv")
 
 # Get upper triangle of the correlation matrix
 get_upper_tri <- function(cormat) {
@@ -30,7 +31,7 @@ get_upper_tri <- function(cormat) {
 ```
 ## R synthpop
 
-Below are the summaries provided by synthpop.
+The synthetic data was produced using the function `syn()` and the summaries seen below were produced from using the function `summary()` from the `synthpop` library.
 
 ### Original data
 
@@ -44,9 +45,13 @@ summary(satgpa)
 summary(synth_bisaillon)
 ```
 
-## Heat maps
+## Heat maps (correlation matrices)
 
-These plots show the correlation between the variables.
+These plots show the correlation between two variables. This type of data validation is useful if the data is Gaussian (i.e., it is normally distributed). If the data were skewed, this would not be a sufficient test as this only looks at the correlation between two variables at a time. This is an appropriate test if the intended use is to be able to perform calculations based on mean and/or covariance in one-dimension. Otherwise, if the intended use of the synthetic data is to look at relationships between multiple variables (e.g., sex, sat_v, and fy_gpa) then this test would not return that information appropriately [how do I word this better???]. 
+
+In sum, these heat maps can be used to preliminary verify how similar the synthetic data is to the original data, assuming that the data are normally distributed, by comparing the correlations of two variables in the respective data sets. The heat map makes it easy to visually compare if the two data sets are producing similar results.
+
+To examine relationships between multiple variables at a time, we can look at the Earth Mover's Distance (Wasserstein) which will be discussed in the next section.
 
 :::::::::::::: {.columns}
 ::: {.column width="50%"}
@@ -160,3 +165,46 @@ print(heat)
 
 :::
 ::::::::::::::
+
+## Earth Mover's Distance
+
+More infomation re: Earth Mover's Distance can be found [here](https://www.rdocumentation.org/packages/emdist/versions/0.3-1/topics/emd).
+
+### Value
+
+Earth Mover's Distance (EMD) between of the distributions `A` and `B`. If `A` and `B` are not distributions then `A` is the source and `B` is the target.
+
+### Details
+
+`emd2d` interprets the two matrices `A` and `B` as a distribution over a two-dimensional grid. The distance between the grid points in each direction is defined by `xdist` and `ydist.` Both matrices must have the same dimensionality.
+
+`emd` uses first column of each matrix as the weighs and the remaining columns as location coordinates in a up to four-dimensional space. `A` and `B` **must have the same number of columns**. `emdw` separates the weights from the location matrices but is otherwise identical to `emd`. `emdr` uses the original EMD implementation by Yossi Rubner from Stanford. In case A and B are not densities, the weighted sum of flows is normalized by the smaller total mass of the two. The version of the `emd` package released on CRAN contains only this implementation and all other functions are just front-ends for the call to `emdr.`
+
+### Note re: the distance argument
+
+Distance (dist) to be used for the computation of the cost over the locations. Must be either `"euclidean"`, `"manhattan"` or a closure taking two vectors and returning a scalar number. The latter case is much less efficient because it requires R evaluation for every possible combination of flows.
+
+```{r emd, echo=FALSE, warning=FALSE}
+# mat_satgpa <- satgpa %>% as.matrix()
+# mat_synth <- synth_bisaillon %>% as.matrix()
+
+# emd(mat_satgpa, mat_synth, dist = "euclidean")
+# [1] 1.243486
+# Time difference of 5.467048 secs
+
+# emd2d(mat_satgpa, mat_synth, dist = "euclidean")
+# [1] 2.925377
+# Time difference of 30.70497 mins (for euclidean)
+# Time difference of 33.62831 mins (for manhattan)
+```
+
+Below are the results and run-time for each EMD function:
+
+Function | Result | Run-time
+|---|---|---|
+`emd` | 1.243486 | 5.467048 secs
+`emd2d` | 2.925377 | 30.70497 mins
+
+The result that is returned shows us how close our synthetic data is to the original data. Ideally, you would want a value of 0 (or close to 0). However, since we do not have a pre-determined threshold to gauge proximity it cannot be determined whether values returned are "close enough" to the original data set.
+
+This threshold may differ for users depending on their use case. Nonetheless, this test can show how similar the data are to one another.
