@@ -1,0 +1,11 @@
+,,,0
+sat_m,sat_sum,fy_gpa,0.0535
+sat_v,sat_sum,fy_gpa,0.056
+sex,sat_sum,fy_gpa,0.081
+sat_sum,hs_gpa,fy_gpa,0.084
+sat_v,sat_m,fy_gpa,0.175
+sex,sat_m,fy_gpa,0.196
+sat_m,hs_gpa,fy_gpa,0.207
+sex,hs_gpa,fy_gpa,0.216
+sex,sat_v,fy_gpa,0.266
+sat_v,hs_gpa,fy_gpa,0.29
