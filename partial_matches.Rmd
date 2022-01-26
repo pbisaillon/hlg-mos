@@ -76,6 +76,8 @@ In R it is possible to run the `merge()` function iteratively on all combination
 combn(c("a", "b", "c"), 2, simplify = FALSE)
 ```
 
+Partial matches are more likely than full matches. The SAT dataset has a variable for sex, so it is nearly guaranteed that at least one column can be matched. As we try to match more and more columns, we get less matches.
+
 ```{r, echo=FALSE}
 # Setup
 num_cols <- length(satgpa)
