@@ -15,13 +15,12 @@ library(reshape2)
 
 # Source R script from GitHub
 satgpa <-
-  readr::read_csv("/Documents and Settings/vongbri/Documents/Hackathon/hlg-mos/data/satgpa.csv") %>%
-  select(-sat_sum)
+  readr::read_csv("./data/satgpa.csv") %>%
+  select(-sat_sum) 
+  # removed this from the data set because it's dependent on sat_m and sat_v
 
 synth_bisaillon <-
-  readr::read_csv(
-    "/Documents and Settings/vongbri/Documents/Hackathon/hlg-mos/synthpop/synth_data.csv"
-  )
+  readr::read_csv("./data/synth_data.csv")
 
 # Get upper triangle of the correlation matrix
 get_upper_tri <- function(cormat) {
