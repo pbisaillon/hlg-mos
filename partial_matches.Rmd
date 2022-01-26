@@ -28,9 +28,9 @@ Trying to match original records in synthetic data is a simple measure of privac
 
 ### Can someone find themselves in the data?
 
-If a record is fully replicated in the synthetic data, it is effectively disclosed. This might not be serious, but it is still good to be aware of these matches.
+If a record is fully replicated in the synthetic data, it is effectively disclosed.
 
-Thankfully this is easy to do in R. An inner-join of the original and synthetic data will quickly return all rows that match 100%.
+Thankfully finding matches is easy to do in R. An inner-join of the original and synthetic data will quickly return all rows that match 100%.
 
 ```{r}
 # Number of 100% matched rows
@@ -95,7 +95,7 @@ levels_at_match <- data.frame(
   match_level=integer()
 )
 
-for (x in 5:1) {
+for (x in rev(seq_len(num_cols))) {
   # Find all combinations of columns of x length
   combos <- combn(columns_names, x, simplify = FALSE)
   # For each combination, find all inner joins
@@ -119,13 +119,14 @@ for (x in 5:1) {
 # Prepare data for graphing
 uniques <- unique(levels_at_match[, c("index", "match_level")])
 cummulative_counts <- list()
-for (x in 6:1) {
+for (x in rev(seq_len(num_cols))) {
   cummulative_counts[x] <- nrow(unique(uniques[uniques$match_level >= x, ]))
 }
 
-cummulative_counts <- data.frame(match_level = 1:6, n = unlist(cummulative_counts))
+cummulative_counts <- data.frame(match_level = seq_len(num_cols),
+                                 n = unlist(cummulative_counts))
 # Rebase as percentages
-cummulative_counts$n <- 100 * cummulative_counts$n / nrow(df)
+cummulative_counts$n <- 100 * cummulative_counts$n / nrow(satgpa)
 cummulative_counts$perc <- paste0(cummulative_counts$n, "%")
 
 fig <- plot_ly(
