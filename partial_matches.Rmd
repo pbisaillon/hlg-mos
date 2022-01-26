@@ -54,9 +54,8 @@ fig <- plot_ly(matches_df, labels = ~label, values = ~value, type = 'pie',
         hoverinfo = 'text',
         marker = list(colors = colors,
                       line = list(color = '#FFFFFF', width = 1)),
-                      #The 'pull' attribute can also be used to create space between the sectors
         showlegend = FALSE)
-fig <- fig %>% layout(title = 'United States Personal Expenditures by Categories in 1960',
+fig <- fig %>% layout(title = "How many records are fully matched",
          xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
          yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
 
