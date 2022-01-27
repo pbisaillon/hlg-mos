@@ -169,14 +169,14 @@ heat <-
 
 print(heat)
 ```
-> Note: synthpop` generates randomized numbers for the synthetic data; therefore, multiple outputs may not produce the same numbers. However, the synthetic data outputs should still be fairly similar [do we know how similar they should be?] that we only really need to show one comparison to demonstrate that the synthetic data shows similar correlations to the original data.
+> Note: synthpop` generates randomized numbers for the synthetic data; therefore, multiple outputs may not produce the same numbers. However, the synthetic data outputs should still yield similar results [do we have a number to support this?] so that we would only really need to show one comparison to demonstrate that the synthetic data shows similar correlations to the original data.
 
 :::
 ::::::::::::::
 
 ## Earth Mover's Distance
 
-More infomation re: Earth Mover's Distance can be found [here](https://www.rdocumentation.org/packages/emdist/versions/0.3-1/topics/emd).
+More information re: Earth Mover's Distance can be found [here](https://www.rdocumentation.org/packages/emdist/versions/0.3-1/topics/emd).
 
 ------
 
@@ -189,6 +189,7 @@ Earth Mover's Distance (EMD) between of the distributions `A` and `B`. If `A` an
 #### Details
 
 `emd2d` interprets the two matrices `A` and `B` as a distribution over a two-dimensional grid. The distance between the grid points in each direction is defined by `xdist` and `ydist.` Both matrices must have the same dimensionality.
+
 `emd` uses first column of each matrix as the weighs and the remaining columns as location coordinates in a up to four-dimensional space. `A` and `B` **must have the same number of columns**. `emdw` separates the weights from the location matrices but is otherwise identical to `emd`. `emdr` uses the original EMD implementation by Yossi Rubner from Stanford. In case A and B are not densities, the weighted sum of flows is normalized by the smaller total mass of the two. The version of the `emd` package released on CRAN contains only this implementation and all other functions are just front-ends for the call to `emdr.`
 
 #### Note re: the distance argument
