@@ -13,6 +13,8 @@ library(tidyverse)
 library(synthpop)
 library(reshape2)
 library(emdist)
+library(ztable)
+library(magrittr)
 
 # Source R script from GitHub
 satgpa <-
@@ -169,10 +171,10 @@ heat <-
 
 print(heat)
 ```
-> Note: synthpop` generates randomized numbers for the synthetic data; therefore, multiple outputs may not produce the same numbers. However, the synthetic data outputs should still yield similar results [do we have a number to support this?] so that we would only really need to show one comparison to demonstrate that the synthetic data shows similar correlations to the original data.
-
 :::
 ::::::::::::::
+
+> **Note:** `synthpop` generates randomized numbers for the synthetic data; therefore, multiple outputs may not produce the same numbers. However, the synthetic data outputs should still yield similar results [do we have a number to support this?] so that we would only really need to show one comparison to demonstrate that the synthetic data shows similar correlations to the original data.
 
 ## Earth Mover's Distance
 
