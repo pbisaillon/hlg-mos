@@ -24,6 +24,7 @@ synth_bisaillon <-
   readr::read_csv("./synthpop/synth_data.csv")
 
 # Get upper triangle of the correlation matrix
+## this will remove the top half of the values for the heat map for a cleaner look
 get_upper_tri <- function(cormat) {
   cormat[lower.tri(cormat)] <- NA
   return(cormat)
@@ -60,8 +61,10 @@ To examine relationships between multiple variables at a time, we can look at th
 
 ### Original data
 ```{r plot1, echo=FALSE, warning=FALSE}
+# Compute the variance of x and the covariance or correlation of x and y if these are vectors
 cormat <- round(cor(satgpa), 2)
 upper_tri <- get_upper_tri(cormat)
+# Convert an object into a molten data frame
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 
 # Create a ggheatmap
@@ -115,8 +118,10 @@ print(heat)
 
 ### Synthetic data
 ```{r plot2, echo=FALSE, warning=FALSE}
+# Compute the variance of x and the covariance or correlation of x and y if these are vectors
 cormat <- round(cor(synth_bisaillon), 2)
 upper_tri <- get_upper_tri(cormat)
+# Convert an object into a molten data frame
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 
 # Create a ggheatmap
