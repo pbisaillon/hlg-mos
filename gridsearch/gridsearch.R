@@ -58,7 +58,7 @@ sequence_results$em <- em
 sequence_results$matches <- matches
 
 # Save
-write.csv(sequence_results, "./gridsearch/visit_sequences.csv", row.names = FALSE)
+write.csv(sequence_results, "./visit_sequences.csv", row.names = FALSE)
 
 # Have a quick look at the top scores
 top_scores <- sequence_results %>%
@@ -109,7 +109,7 @@ method_results <- data.frame(
 )
 
 # Save
-write.csv(method_results, "./gridsearch/methods.csv", row.names = FALSE)
+write.csv(method_results, "./methods.csv", row.names = FALSE)
 
 # Have a quick look at the top scores
 top_scores <- method_results %>%
