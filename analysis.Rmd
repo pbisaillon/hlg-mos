@@ -9,12 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo=TRUE)
 
 # Load in libraries and retrieve data -------------------------------------
-library(tidyverse)
+library(dplyr)
 library(synthpop)
 library(reshape2)
 library(emdist)
 library(ztable)
 library(magrittr)
+library(ggplot2)
 
 # Source R script from GitHub
 satgpa <-
@@ -230,3 +231,193 @@ This threshold may differ for users depending on their use case. Nonetheless, th
 Which function should you use? It depends on your use-case.
 
 If the goal is to create synthetic data that is as close as possible to the original data then it might be useful to use `emd2d` to get the most accurate picture (of the two functions). Keep in mind that this function takes significantly longer to run than `emd`. Regardless of which option you choose to run as your final test, it would be prudent to run `emd` first and see that result prior to running `emd2d`. The reason would be that `emd` is time-effective and if you return a high value with this function, you would probably return an even higher value with `emd2d`. In that, if you returned a value above your desired threshold, it might be more valuable to modify the parameters of your synthetic data before testing it further.
+
+```{r, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+library(plotly)
+library(dplyr)
+
+# Source R script from GitHub
+satgpa <-
+  read.csv("./data/satgpa.csv") %>%
+  select(-sat_sum) 
+  # removed this from the data set because it's dependent on sat_m and sat_v
+
+synth_bisaillon <-
+  read.csv("./synthpop/synth_data.csv")
+```
+
+# Record-matching as a privacy measure
+
+Trying to match original records in synthetic data is a simple measure of privacy but a practical one. If a synthetic dataset were to be published, people would likely check whether they can find themselves in there.
+
+## Full matches
+
+### Can someone find themselves in the data?
+
+If a record is fully replicated in the synthetic data, it is effectively disclosed.
+
+Thankfully finding matches is easy to do in R. An inner-join of the original and synthetic data will quickly return all rows that match 100%.
+
+```{r}
+# Number of 100% matched rows
+full_matches = merge(satgpa, synth_bisaillon) %>% nrow()
+
+full_matches
+```
+
+```{r, echo=FALSE}
+total_records = nrow(satgpa)
+full_matches = merge(satgpa, synth_bisaillon) %>% nrow()
+
+matches_df <- data.frame(
+  label = c("Fully matched", "Not fully-matched"),
+  value = c(full_matches, total_records - full_matches))
+
+fig <- plot_ly(matches_df, labels = ~label, values = ~value, type = 'pie',
+               textposition = 'inside',
+               textinfo = 'label+percent',
+               insidetextfont = list(color = '#FFFFFF'),
+               hoverinfo = 'text',
+               marker = list(colors = colors,
+                             line = list(color = '#FFFFFF', width = 1)),
+               showlegend = FALSE,
+               width = 300, height = 300)
+fig <- fig %>% layout(title = "How many records are fully matched",
+                      xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                      yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+
+fig
+```
+
+## Partial matches
+
+### Could someone recognize parts of their data?
+
+Even if a record is not fully replicated, pieces of it may still be recognizable. For example, someone's neighbor might be able to make guesses with part of their data. Or if only 3 variables of a record are recognizable, it may still be perceived as disclosed.
+
+In R it is possible to run the `merge()` function iteratively on all combinations of columns. The `combn()` function will return all permutations of a vectors.
+
+```{r}
+# Return all possible samples of size 2 from (a, b, c)
+combn(c("a", "b", "c"), 2, simplify = FALSE)
+```
+
+Partial matches are more likely than full matches. The SAT dataset has a variable for sex, so it is nearly guaranteed that at least one column can be matched. As we try to match more and more columns, we get less matches.
+
+```{r, echo=FALSE}
+# Point to dataframes
+original <- satgpa
+syn_df <- synth_bisaillon
+
+# Setup
+num_cols <- length(original)
+columns_names <- names(original)
+
+base_df <- original
+base_df$index <- seq_len(nrow(base_df))
+
+syn_df <- synth_bisaillon
+syn_df$syn_index <- seq_len(nrow(syn_df))
+
+levels_at_match <- data.frame(
+  index=integer(),
+  syn_index=integer(),
+  match_level=integer()
+)
+
+for (x in rev(seq_len(num_cols))) {
+  # Find all combinations of columns of x length
+  combos <- combn(columns_names, x, simplify = FALSE)
+  # For each combination, find all inner joins
+  matches <- lapply(combos,
+                    function(combo) {
+                      m <- merge(base_df, syn_df, by = combo)
+                      if (nrow(m) == 0) return(NULL)
+                      m <- m[, c("index", "syn_index")]
+                      m$match_level <- x
+                      m
+                    }
+  )
+  # Combine the successful inner joins
+  matches <- unique(do.call(rbind, matches))
+  # Append them to the tracking dataset
+  levels_at_match <- rbind(levels_at_match, matches)
+  # Remove the indexes that were matched, to make future inner joins faster
+  base_df <- base_df[!base_df$index %in% matches$index, ]
+}
+
+# Prepare data for graphing
+uniques <- unique(levels_at_match[, c("index", "match_level")])
+cummulative_counts <- list()
+for (x in rev(seq_len(num_cols))) {
+  cummulative_counts[x] <- nrow(unique(uniques[uniques$match_level >= x, ]))
+}
+
+cummulative_counts <- data.frame(match_level = seq_len(num_cols),
+                                 n = unlist(cummulative_counts))
+# Rebase as percentages
+cummulative_counts$n <- 100 * cummulative_counts$n / nrow(original)
+cummulative_counts$perc <- paste0(cummulative_counts$n, "%")
+
+fig <- plot_ly(
+  x = cummulative_counts$match_level,
+  y = cummulative_counts$n,
+  text = cummulative_counts$perc,
+  hoverinfo = 'text',
+  type = "bar",
+  marker = list(line = list(color = 'rgb(8,48,107)',
+                            width = 1.5)),
+  width = 300, height = 300) %>%
+  layout(title = "Partial matches of original data (SAT)",
+         xaxis = list(title = "Columns to match"),
+         yaxis = list(title = "Percentage of rows matched"),
+         bargap = 0)
+
+fig
+```
+
+## Grid search
+
+Below are some very quick grid search results. To get more trustworthy results, we would have to run longer searches. These searches were done quickly in only a few hours.
+
+### Variable sequences
+
+In `./gridsearch/gridsearch.R` there are simple examples of an iterative grid search for `rsynthpop` synthesis.
+
+A grid search is exhaustive trial of "hyper-parameters", which are settings set by the user. If the user doesn't know what settings are the best, a grid search will iterate over all of their combinations and return the best scores.
+
+You can set the order that variables are synthesize in `rsynthpop`. It's clear what the best order is, so we can try all of the combinations. Since synthesis is random, it's a good idea to run tests multiple times and average them.
+
+Below are the lowest earthmover scores for the sequences (averages of 3 trials each). `sat_sum` seems to be a good variable to start with.
+
+```{r, echo=FALSE}
+col_names <- c("sex", "hs_gpa", "fy_gpa", "sat_sum", "sat_v", "sat_m")
+
+read.csv("./gridsearch/visit_sequences.csv") %>%
+  mutate_at(c("s1", "s2", "s3", "s4", "s5", "s6"), function(x) col_names[x]) %>%
+  group_by(s1, s2, s3, s4, s5, s6, method) %>%
+  summarise(mean_em = mean(em), mean_matches = mean(matches)) %>%
+  ungroup() %>%
+  arrange(mean_em) %>%
+  head()
+```
+
+### Methods
+
+`rsynthpop` offers many different methods of synthesis. We can perform a grid search on these.
+
+The following worked with the dataset: ctree, cart, rf, ranger, norm, normrank, sample
+
+These didn't work, either because they're for categorical data or the dataset needed extra processing: bagging, survctree, lognorm, sqrtnorm, cubertnorm, logreg, polyreg, polr, pmm, passive, nested, satcat
+
+Using the `sat_sum	sat_v	hs_gpa	sat_m	sex	fy_gpa` sequence (each run 10 times), we see that the random forest methods give the best scores. However, these earthmover scores are higher than the search 
+
+```{r, echo=FALSE}
+read.csv("./gridsearch/methods.csv") %>%
+  group_by(method) %>%
+  summarise(mean_em = mean(em), mean_matches = mean(matches)) %>%
+  ungroup() %>%
+  arrange(mean_em) %>%
+  head()
+```
