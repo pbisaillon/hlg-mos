@@ -24,7 +24,7 @@ library(plotly)
 library(reticulate)
 # To replicate, create a conda env and run
 # conda install pandas seaborn scipy
-# use_python("./conda_env/bin/python")
+use_python("./conda_env/bin/python")
 
 # Source R script from GitHub
 satgpa <-
