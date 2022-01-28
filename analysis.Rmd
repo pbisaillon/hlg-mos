@@ -16,6 +16,11 @@ library(emdist)
 library(ztable)
 library(magrittr)
 library(ggplot2)
+library(plotly)
+library(reticulate)
+# To replicate, create a conda env and run
+# conda install pandas seaborn scipy
+use_python("./conda_env/bin/python")
 
 # Source R script from GitHub
 satgpa <-
@@ -233,9 +238,6 @@ Which function should you use? It depends on your use-case.
 If the goal is to create synthetic data that is as close as possible to the original data then it might be useful to use `emd2d` to get the most accurate picture (of the two functions). Keep in mind that this function takes significantly longer to run than `emd`. Regardless of which option you choose to run as your final test, it would be prudent to run `emd` first and see that result prior to running `emd2d`. The reason would be that `emd` is time-effective and if you return a high value with this function, you would probably return an even higher value with `emd2d`. In that, if you returned a value above your desired threshold, it might be more valuable to modify the parameters of your synthetic data before testing it further.
 
 ```{r, include=FALSE, warning=FALSE}
-knitr::opts_chunk$set(echo=TRUE)
-library(plotly)
-library(dplyr)
 
 # Source R script from GitHub
 satgpa <-
@@ -420,4 +422,78 @@ read.csv("./gridsearch/methods.csv") %>%
   ungroup() %>%
   arrange(mean_em) %>%
   head()
+```
+
+## Python analysis
+
+```{python}
+import pandas as pd
+import seaborn as sns
+from scipy.stats import wasserstein_distance
+import matplotlib.pyplot as plt
+sns.set_theme(style="ticks")
+```
+
+```{python}
+#Load CSV file in a dataframe
+df = pd.read_csv('./data/satgpa.csv')
+df = df.drop(columns = ['sat_sum'])
+dfsynth = pd.read_csv('./synthpop/synth_data.csv')
+```
+
+### Visual inspection
+
+```{python}
+sns.pairplot(df, hue = "sex")
+# Necessary to render in RStudio
+# plt.show()
+```
+
+```{python}
+sns.pairplot(dfsynth, hue = "sex")
+# Necessary to render in RStudio
+# plt.show()
+```
+
+### Comparing distributions
+
+#### Wassertein
+
+```{python}
+print(f"Distance between sex is {wasserstein_distance(df['sex'].tolist(), dfsynth['sex'].tolist()):.3f}")
+print(f"Distance between sat_v is {wasserstein_distance(df['sat_v'].tolist(), dfsynth['sat_v'].tolist()):.3f}")
+print(f"Distance between sat_m is {wasserstein_distance(df['sat_m'].tolist(), dfsynth['sat_m'].tolist()):.3f}")
+#print(f"Distance between sat_sum is {wasserstein_distance(df['sat_sum'].tolist(), dfsynth['sat_sum'].tolist()):.3f}")
+print(f"Distance between hs_gpa is {wasserstein_distance(df['hs_gpa'].tolist(), dfsynth['hs_gpa'].tolist()):.3f}")
+print(f"Distance between fy_gpa is {wasserstein_distance(df['fy_gpa'].tolist(), dfsynth['fy_gpa'].tolist()):.3f}")
+```
+
+#### Conditonal distributions
+
+With `sex = 1`
+
+```{python}
+dfc = df[df['sex'] == 1]
+dfsynthc = dfsynth[dfsynth['sex'] == 1]
+
+print(f"Distance between sex is {wasserstein_distance(dfc['sex'].tolist(), dfsynthc['sex'].tolist()):.3f}")
+print(f"Distance between sat_v is {wasserstein_distance(dfc['sat_v'].tolist(), dfsynthc['sat_v'].tolist()):.3f}")
+print(f"Distance between sat_m is {wasserstein_distance(dfc['sat_m'].tolist(), dfsynthc['sat_m'].tolist()):.3f}")
+#print(f"Distance between sat_sum is {wasserstein_distance(dfc['sat_sum'].tolist(), dfsynthc['sat_sum'].tolist()):.3f}")
+print(f"Distance between hs_gpa is {wasserstein_distance(dfc['hs_gpa'].tolist(), dfsynthc['hs_gpa'].tolist()):.3f}")
+print(f"Distance between fy_gpa is {wasserstein_distance(dfc['fy_gpa'].tolist(), dfsynthc['fy_gpa'].tolist()):.3f}")
+```
+
+With `sex = 2`
+
+```{python}
+dfc = df[df['sex'] == 2]
+dfsynthc = dfsynth[dfsynth['sex'] == 2]
+
+print(f"Distance between sex is {wasserstein_distance(dfc['sex'].tolist(), dfsynthc['sex'].tolist()):.3f}")
+print(f"Distance between sat_v is {wasserstein_distance(dfc['sat_v'].tolist(), dfsynthc['sat_v'].tolist()):.3f}")
+print(f"Distance between sat_m is {wasserstein_distance(dfc['sat_m'].tolist(), dfsynthc['sat_m'].tolist()):.3f}")
+#print(f"Distance between sat_sum is {wasserstein_distance(dfc['sat_sum'].tolist(), dfsynthc['sat_sum'].tolist()):.3f}")
+print(f"Distance between hs_gpa is {wasserstein_distance(dfc['hs_gpa'].tolist(), dfsynthc['hs_gpa'].tolist()):.3f}")
+print(f"Distance between fy_gpa is {wasserstein_distance(dfc['fy_gpa'].tolist(), dfsynthc['fy_gpa'].tolist()):.3f}")
 ```
