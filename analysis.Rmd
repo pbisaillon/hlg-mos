@@ -242,10 +242,13 @@ print(heat)
 
 ## Earth Mover's Distance
 
+For this exercise, the team chose to measure the difference between the original and synthetic datasets using the Earth Mover's Distance (EMD), which is also known as the Wasserstein metric. This metric was selected as it allows for a single score (distance) to be calculated while preserving the detail of data points that can be lost when comparing between aggregates. At it's core, the EMD compares the distance between the distributions, ideally preserving the positioning in higher dimensional spaces. 
+
 More information re: Earth Mover's Distance can be found [here](https://www.rdocumentation.org/packages/emdist/versions/0.3-1/topics/emd).
 
 
-The EMD is also called the Wasserstein metric. It was measured between the marginal distributions using the scipy package.
+In Python, the EMD function was used from the SciPy package, and yielded the following results when applied to the marginals in the dataset:
+
 
 | Variable  | EMD  |
 |---|---|
